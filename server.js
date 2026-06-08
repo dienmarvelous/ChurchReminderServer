@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
 
 // ── Send SMS ─────────────────────────────────────
 app.post('/send-sms', async (req, res) => {
-  const { username, apikey, to, message, from } = req.body;
+  const { username, apikey, to, message, from, sandbox } = req.body;
 
   if (!username || !apikey || !to || !message) {
     return res.status(400).json({ error: 'Missing required fields: username, apikey, to, message' });
@@ -26,7 +26,12 @@ app.post('/send-sms', async (req, res) => {
     body.append('message', message);
     if (from && from.trim()) body.append('from', from.trim());
 
-    const atRes = await fetch('https://api.africastalking.com/version1/messaging', {
+    // Use sandbox or production URL
+    const smsUrl = sandbox
+      ? 'https://api.sandbox.africastalking.com/version1/messaging'
+      : 'https://api.africastalking.com/version1/messaging';
+
+    const atRes = await fetch(smsUrl, {
       method: 'POST',
       headers: {
         'apiKey': apikey,
@@ -56,7 +61,7 @@ app.post('/send-sms', async (req, res) => {
 
 // ── Make Voice Call ───────────────────────────────
 app.post('/send-call', async (req, res) => {
-  const { username, apikey, to, from } = req.body;
+  const { username, apikey, to, from, sandbox } = req.body;
 
   if (!username || !apikey || !to || !from) {
     return res.status(400).json({ error: 'Missing fields: username, apikey, to, from (caller number required for calls)' });
@@ -68,7 +73,12 @@ app.post('/send-call', async (req, res) => {
     body.append('from', from.trim());
     body.append('to', to);
 
-    const atRes = await fetch('https://voice.africastalking.com/call', {
+    // Sandbox voice uses a different URL
+    const callUrl = sandbox
+      ? 'https://voice.sandbox.africastalking.com/call'
+      : 'https://voice.africastalking.com/call';
+
+    const atRes = await fetch(callUrl, {
       method: 'POST',
       headers: {
         'apiKey': apikey,
